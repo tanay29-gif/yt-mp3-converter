@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master YT Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-700">
+        <h1 class="text-3xl font-bold text-center text-red-500 mb-6">C-Engine MP3</h1>
+        
+        <div class="space-y-4">
+            <input type="text" id="url" placeholder="Paste YouTube Link..." 
+                   class="w-full bg-gray-700 border-none rounded-xl p-4 text-white focus:ring-2 focus:ring-red-500 outline-none">
+            
+            <button onclick="process()" id="btn" class="w-full bg-red-600 hover:bg-red-700 font-bold py-4 rounded-xl transition duration-300 transform active:scale-95">
+                Download Studio MP3
+            </button>
+        </div>
+
+        <div id="status" class="mt-6 hidden text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-2"></div>
+            <p id="statusText" class="text-gray-400 text-sm">Initializing Engine...</p>
+        </div>
+    </div>
+
+    <script>
+        async function process() {
+            const url = document.getElementById('url').value;
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+
+            if(!url) return alert("Please paste a URL");
+
+            btn.disabled = true;
+            status.classList.remove('hidden');
+            statusText.innerText = "Downloading from YT...";
+
+            try {
+                const response = await fetch('/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url})
+                });
+
+                if (response.ok) {
+                    statusText.innerText = "Finalizing File...";
+                    const blob = await response.blob();
+                    const dlUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = dlUrl;
+                    a.download = "music.mp3";
+                    a.click();
+                    statusText.innerText = "Done!";
+                } else {
+                    alert("Conversion Failed. Check server logs.");
+                }
+            } catch (err) {
+                alert("Connection error.");
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => status.classList.add('hidden'), 3000);
+            }
+        }
+    </script>
+</body>
+</html>
